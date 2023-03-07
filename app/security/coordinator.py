@@ -2,7 +2,7 @@
 Security Coordinator
 Handles all security management & authentication
 """
-import aioredis
+from redis import asyncio as aioredis
 import uuid
 import msgpack
 from fastapi import Request
@@ -11,7 +11,7 @@ from typing import Optional
 import argon2
 
 from app.database import DBConnector
-
+from app.functions.packer import pack, unpack
 from .models.session import Session
 
 
@@ -35,7 +35,7 @@ class SecurityCoordinator:
         :param value: Value Data dict
         :return: if operation was successful
         """
-        _value = msgpack.packb(value, use_bin_type=True)
+        _value = pack(value)
         async with self.__redis_client.client() as conn:
             return await conn.execute_command("SET", f"{key}", _value, "EX", "10800")
 
@@ -46,7 +46,7 @@ class SecurityCoordinator:
         :return: None or dict
         """
         if value := await self.__redis_client.get(f"{key}"):
-            return msgpack.unpackb(value, raw=False)
+            return unpack(value)
 
     async def _cache_delete_key(self, key: str) -> None:
         """

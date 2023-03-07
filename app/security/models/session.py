@@ -5,4 +5,4 @@ from datetime import datetime
 class Session(BaseModel):
     user_id: str
     username: str
-    expires: datetime
+    expiry_date: datetime

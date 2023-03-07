@@ -32,4 +32,7 @@ class StartupVariables:
 
     def __init__(self):
         self.database_uri: str = self.__get_key_or_error("MONGODBURI")
+        self.redis_uri: str = self.__get_key_or_default("REDISURI", "redis://redis:6379")
         self.db_name: str = self.__get_key_or_default("DBVERIFYNAME", "honours1")
+        self.session_secret = self.__get_key_or_error("SESSIONSECRET")
+

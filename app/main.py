@@ -8,8 +8,9 @@ import uvicorn
 
 from database import DBConnector
 from functions.startupVariables import StartupVariables
+from security import SecurityCoordinator
 
-from routes import *
+from routes import session_definitions
 
 system_variables = StartupVariables()
 debug = os.getenv("DEBUG")
@@ -40,15 +41,18 @@ def create_app():
     )
     # Set up DB & API connections
     new_app.db = DBConnector(system_variables.database_uri, system_variables.db_name)
+    new_app.security = SecurityCoordinator(system_variables.redis_uri, new_app.db)
 
     # Startup and Shutdown Events
     @new_app.on_event("startup")
     async def startup():
         await new_app.db.connect_db()
+        await new_app.security.start_up()
 
     @new_app.on_event("shutdown")
     async def shutdown():
         await new_app.db.close_mongo_connection()
+
     # Add cors
     new_app.add_middleware(
         CORSMiddleware,
@@ -62,7 +66,8 @@ def create_app():
     new_app.add_middleware(SessionMiddleware, secret_key=system_variables.session_secret, max_age=10800)
 
     # Routes
-
+    for definition in session_definitions:
+        new_app.include_router(definition.router, prefix=definition.prefix, tags=definition.tags)
 
     # Define OpenAPI info
     def custom_openapi():
