@@ -37,7 +37,30 @@ async def get_video_tags(self: 'DBConnector', video_id: str) -> List[Tag]:
                 u"foreignField": u"_id",
                 u"as": u"user"
             }
+        },
+        {
+            u"$unwind": {
+                u"path": u"$video"
+            }
+        },
+        {
+            u"$unwind": {
+                u"path": u"$user"
+            }
+        },
+    {
+        u"$lookup": {
+            u"from": u"Tournaments",
+            u"localField": u"video.tournament_id",
+            u"foreignField": u"_id",
+            u"as": u"video.tournament"
         }
+    },
+    {
+        u"$unwind": {
+            u"path": u"$video.tournament"
+        }
+    }
     ]):
         tags.append(Tag(**tag))
     return tags
