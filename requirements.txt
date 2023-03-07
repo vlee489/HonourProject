@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+motor
+dnspython
+pydantic
+cryptography
+aiohttp
+aioredis
+msgpack
+asyncio
+itsdangerous
+pydantic-mongo
+odmantic
+argon2-cffi
