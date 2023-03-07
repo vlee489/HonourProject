@@ -5,7 +5,7 @@ from .tournament import Tournament
 
 
 class Video(BaseModel):
-    _id: str = Field(description="The id of the video")
+    id: str = Field(description="The id of the video")
     name: str = Field(description="The name of the video")
     tournament: Tournament = Field(description="The tournament the video is from")
     length: float = Field(description="Length of video in seconds and Milliseconds")
