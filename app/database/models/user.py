@@ -1,17 +1,10 @@
-from pydantic import BaseModel
-from bson import ObjectId
+from pydantic import BaseModel, Field
+from .pydanticObjectID import PydanticObjectId
 
 
 class User(BaseModel):
-    _id: ObjectId
+    id: PydanticObjectId = Field(alias="_id")
     name: str
     username: str
     password: str  # argon2 hash
-
-    @property
-    def id(self) -> str:
-        return str(self._id)
-
-    class Config:
-        json_encoders = {ObjectId: str}
 

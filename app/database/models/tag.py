@@ -1,20 +1,17 @@
 from pydantic import BaseModel, Field
-from bson import ObjectId
+from .pydanticObjectID import PydanticObjectId
 from typing import Optional
 from .user import User
 from .video import Video
 
 
 class Tag(BaseModel):
-    _id: ObjectId
-    user_id: ObjectId
+    id: PydanticObjectId = Field(alias="_id")
+    user_id: PydanticObjectId
     user: Optional[User]
     video: Optional[Video]
-    video_id: ObjectId
+    video_id: PydanticObjectId
     start: float
     end: float
     description: str
     tags: dict
-
-    class Config:
-        json_encoders = {ObjectId: str}
