@@ -33,9 +33,9 @@ async def get_tournament_videos(self: 'DBConnector', tour_id: str) -> List[Video
     :return: List of Videos
     """
     videos = []
-    async for video in self._db.Videos.find({"tournament_id": tour_id}):
-        tour = await self.get_id_tournament(video["tournament_id"])
-        video = Video(**video)
-        video.tournament = tour
-        videos.append(video)
+    if tour := await self.get_id_tournament(tour_id):
+        async for video in self._db.Videos.find({"tournament_id": ObjectId(tour_id)}):
+            video = Video(**video)
+            video.tournament = tour
+            videos.append(video)
     return videos
