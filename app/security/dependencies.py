@@ -7,7 +7,7 @@ from .models.session import Session
 
 async def get_user_session(request: Request) -> Optional[Session]:
     """Gets the user's security profile from their cookie session"""
-    return await request.app.security.get_security_profile(request)
+    return await request.app.security.get_session(request)
 
 
 async def security_authentication(user_session=Depends(get_user_session)) -> Session:
