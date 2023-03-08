@@ -1,6 +1,7 @@
 """Routes for tags"""
 from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List
+from bson.errors import InvalidId
 from app.models import Tag, RouteDef, AddTag
 from app.database import InvalidUserIDException, InvalidVideoIDException
 from app.security import security_authentication
@@ -20,13 +21,16 @@ async def get_video_tags(request: Request, video_id: str, user=Depends(security_
 
 
 @router.put("/video/{video_id}", response_model=Tag)
-async def add_video_tag(request: Request, video_id: str, tag:AddTag, user=Depends(security_authentication)):
+async def add_video_tag(request: Request, video_id: str, tag: AddTag, user=Depends(security_authentication)):
     try:
-        result = await request.app.db.add_video_tag(video_id, user.user_id, tag.tags, tag.start, tag.end, tag.description)
+        result = await request.app.db.add_video_tag(video_id, user.user_id, tag.tags, tag.start, tag.end,
+                                                    tag.description)
         return result.dict()
     except InvalidUserIDException:
         raise HTTPException(status_code=404, detail="User not found")
     except InvalidVideoIDException:
         raise HTTPException(status_code=404, detail="Video not found")
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=str(e))
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid ID for video or user")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
