@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from .__init__ import DBConnector
 from bson import ObjectId
 from app.database.models import Tag, User, Video
+from .exceptions import InvalidUserIDException, InvalidVideoIDException
 
 
 async def get_video_tags(self: 'DBConnector', video_id: str) -> List[Tag]:
@@ -48,19 +49,51 @@ async def get_video_tags(self: 'DBConnector', video_id: str) -> List[Tag]:
                 u"path": u"$user"
             }
         },
-    {
-        u"$lookup": {
-            u"from": u"Tournaments",
-            u"localField": u"video.tournament_id",
-            u"foreignField": u"_id",
-            u"as": u"video.tournament"
+        {
+            u"$lookup": {
+                u"from": u"Tournaments",
+                u"localField": u"video.tournament_id",
+                u"foreignField": u"_id",
+                u"as": u"video.tournament"
+            }
+        },
+        {
+            u"$unwind": {
+                u"path": u"$video.tournament"
+            }
         }
-    },
-    {
-        u"$unwind": {
-            u"path": u"$video.tournament"
-        }
-    }
     ]):
         tags.append(Tag(**tag))
     return tags
+
+
+async def add_video_tag(self: 'DBConnector', video_id: str, user_id: str, tags: dict, start: float, end: float,
+                        description: str) -> Tag:
+    """
+    Add a tag to a video
+    :param self:
+    :param video_id:
+    :param user_id:
+    :param tags:
+    :param start:
+    :param end:
+    :param description:
+    :return:
+    """
+    if not (video := await self.get_id_video(video_id)):
+        raise InvalidVideoIDException()
+    if not (user := await self._db.Users.find_one({"_id": ObjectId(user_id)})):
+        raise InvalidUserIDException()
+    new_tag = {
+        "user_id": user["_id"],
+        "video_id": ObjectId(video.id),
+        "start": start,
+        "end": end,
+        "description": description,
+        "tags": tags
+    }
+    result_tag = await self._db.Tags.insert_one(new_tag)
+    tag = Tag(**await self._db.Tags.find_one({"_id": result_tag.inserted_id}))
+    tag.video = video
+    tag.user = User(**user)
+    return tag

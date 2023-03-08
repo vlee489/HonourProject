@@ -34,8 +34,8 @@ if debug:
 
 def create_app():
     new_app = FastAPI(
-        title="Central API",
-        description="IPL Central API Service",
+        title="ReTails API",
+        description="ReTails API Service",
         docs_url="/internaldocs",
         redoc_url="/docs"
     )
