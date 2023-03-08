@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List
 from bson.errors import InvalidId
-from app.models import Tag, RouteDef, AddTag
+from app.models import Tag, RouteDef, AddTag, StatusResponse
 from app.database import InvalidUserIDException, InvalidVideoIDException
 from app.security import security_authentication
 
@@ -34,3 +34,11 @@ async def add_video_tag(request: Request, video_id: str, tag: AddTag, user=Depen
         raise HTTPException(status_code=400, detail="Invalid ID for video or user")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{tag_id}", response_model=StatusResponse)
+async def delete_video_tag(request: Request, tag_id: str, user=Depends(security_authentication)):
+    if await request.app.db.delete_video_tag(tag_id):
+        return StatusResponse(status=True)
+    else:
+        raise HTTPException(status_code=404, detail="Tag not found")

@@ -97,3 +97,18 @@ async def add_video_tag(self: 'DBConnector', video_id: str, user_id: str, tags: 
     tag.video = video
     tag.user = User(**user)
     return tag
+
+
+async def delete_video_tag(self: 'DBConnector', tag_id: str) -> bool:
+    """
+    Delete a tag from a video
+    :param self:
+    :param tag_id:
+    :return:
+    """
+    result = await self._db.Tags.delete_one({"_id": ObjectId(tag_id)})
+    if result.deleted_count > 0:
+        return True
+    return False
+
+
