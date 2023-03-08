@@ -1,6 +1,7 @@
 """Handled Tournaments"""
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional, List
+from datetime import datetime
 
 if TYPE_CHECKING:
     from .__init__ import DBConnector
@@ -32,3 +33,20 @@ async def get_id_tournament(self: 'DBConnector', tour_id: str) -> Optional[Tourn
     if result:
         return Tournament(**result)
     return
+
+
+async def add_tournament(self: 'DBConnector', name: str, organizer: str, date: datetime) -> Tournament:
+    """
+    Add a tournament
+    :param self:
+    :param name: Tournament name
+    :param organizer: organizer name
+    :param date: Tournament date
+    :return: Tournament
+    """
+    result = await self._db.Tournaments.insert_one({
+        "name": name,
+        "date": date,
+        "organizer": organizer,
+    })
+    return await self.get_id_tournament(str(result.inserted_id))

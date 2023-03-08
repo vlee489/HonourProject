@@ -1,7 +1,7 @@
 """Routes for Tournaments"""
 from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List
-from app.models import Tournament, RouteDef
+from app.models import Tournament, RouteDef, AddTournament
 from app.security import security_authentication
 
 router = APIRouter(responses={
@@ -24,3 +24,10 @@ async def get_id_tournament(request: Request, tour_id: str, security_profile=Dep
         return result.dict()
     else:
         raise HTTPException(status_code=404, detail="Tournament not found")
+
+
+@router.put("/", response_model=Tournament)
+async def add_tournament(request: Request, tournament: AddTournament, security_profile=Depends(security_authentication)):
+    """Add a tournament"""
+    return (await request.app.db.add_tournament(tournament.name, tournament.organizer, tournament.date)).dict()
+

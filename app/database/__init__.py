@@ -25,5 +25,5 @@ class DBConnector:
 
     from app.database.__users import get_username_user
     from app.database.__videos import get_id_video, get_tournament_videos
-    from app.database.__tournaments import get_id_tournament, get_all_tournaments
+    from app.database.__tournaments import get_id_tournament, get_all_tournaments, add_tournament
     from app.database.__tags import get_video_tags, add_video_tag, delete_video_tag
