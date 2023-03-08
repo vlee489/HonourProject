@@ -1,7 +1,7 @@
 """Routes for Videos"""
 from fastapi import APIRouter, Request, HTTPException, Depends
 from typing import List
-from app.models import Video, RouteDef
+from app.models import Video, RouteDef, AddVideo
 from app.security import security_authentication
 
 router = APIRouter(responses={
@@ -15,8 +15,7 @@ async def get_tournament_videos(request: Request, tour_id: str, security_profile
     """Get all videos from a tournament"""
     if result := await request.app.db.get_tournament_videos(tour_id):
         return [video.dict() for video in result]
-    else:
-        raise HTTPException(status_code=404, detail="Tournament not found")
+    return []
 
 
 @router.get("/{video_id}", response_model=Video)
@@ -27,3 +26,11 @@ async def get_id_video(request: Request, video_id: str, security_profile=Depends
     else:
         raise HTTPException(status_code=404, detail="Video not found")
 
+
+@router.put("/tour/{tour_id}", response_model=Video)
+async def add_tournament_video(request: Request, tour_id: str, video: AddVideo,
+                               security_profile=Depends(security_authentication)):
+    """Add a video to a tournament"""
+    return (
+        await request.app.db.add_video(tour_id, video.name, video.length, video.alpha_team, video.bravo_team, video.map,
+                                       video.mode, video.url)).dict()
