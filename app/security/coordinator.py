@@ -13,6 +13,7 @@ import argon2
 from app.database import DBConnector
 from app.functions.packer import pack, unpack
 from .models.session import Session
+from .exceptions import InvalidUser, InvalidPassword, CacheError
 
 
 class SecurityCoordinator:
@@ -56,7 +57,7 @@ class SecurityCoordinator:
         """
         await self.__redis_client.delete(f"{key}")
 
-    async def create_session(self, request: Request, username: str, password: str) -> bool:
+    async def create_session(self, request: Request, username: str, password: str) -> dict:
         """
         Completes Authorization Code Grant Request and creates session
         :param request: User's request
@@ -66,12 +67,12 @@ class SecurityCoordinator:
         """
         await self.delete_session(request)  # delete existing sessions for user
         if not (user := await self.__database.get_username_user(username)):
-            return False
+            raise InvalidUser("Invalid Username")
         # Check if password is valid
         try:
             self.__ph.verify(user.password, password)
         except argon2.exceptions.VerifyMismatchError:
-            return False
+            raise InvalidPassword("Invalid Password")
         # If user gets past checks
         session_id = uuid.uuid4().hex
         expiry_date = datetime.datetime.utcnow() + datetime.timedelta(seconds=10800)
@@ -81,8 +82,9 @@ class SecurityCoordinator:
             expiry_date=expiry_date
         )
         if await self._cache_set_key(session_id, session_data.dict()):
-            request.session['security'] = {"session": session_id}
-            return True
+            return {"session": session_id, "expiry_date": expiry_date, "delta": 10800}
+        else:
+            raise CacheError("Unable to create session")
 
     async def delete_session(self, request: Request):
         """
@@ -97,15 +99,13 @@ class SecurityCoordinator:
                 return True
         return False
 
-    async def get_session(self, request: Request) -> Optional[Session]:
+    async def get_session(self, session_id: str) -> Optional[Session]:
         """
         Get a user's session
-        :param request: User's request
+        :param session_id: Session id
         :return: Session or None
         """
-        if session_security := request.session.get("security"):
-            if session_id := session_security.get("session", ""):
-                if session_data := await self._cache_get_key(session_id):
-                    return Session(**session_data)
+        if session_data := await self._cache_get_key(session_id):
+            return Session(**session_data)
         return None
 

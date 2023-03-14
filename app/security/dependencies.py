@@ -1,13 +1,16 @@
 """FastAPI Security Dependencies"""
-from fastapi import Request, HTTPException, Depends
+from fastapi import Request, HTTPException, Depends, Security
+from fastapi.security.api_key import APIKeyHeader
 from typing import Optional
 
 from .models.session import Session
 
+header_authorization = APIKeyHeader(name="Authorization", auto_error=True)
 
-async def get_user_session(request: Request) -> Optional[Session]:
+
+async def get_user_session(request: Request, api_key_header: str = Security(header_authorization)) -> Optional[Session]:
     """Gets the user's security profile from their cookie session"""
-    return await request.app.security.get_session(request)
+    return await request.app.security.get_session(api_key_header)
 
 
 async def security_authentication(user_session=Depends(get_user_session)) -> Session:
